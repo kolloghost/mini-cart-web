@@ -1,53 +1,69 @@
 import './style.css';
 
-// 1. Available products
+// Product IDs stay the same so existing saved carts still work.
 const products = [
-  { id: 1, name: 'Headphones', price: 15000, emoji: '🎧' },
-  { id: 2, name: 'Backpack', price: 12000, emoji: '🎒' },
-  { id: 3, name: 'Sneakers', price: 25000, emoji: '👟' },
-  { id: 4, name: 'Wristwatch', price: 18000, emoji: '⌚' },
+  {
+    id: 1,
+    name: 'Headphones',
+    price: 15000,
+    emoji: '🎧',
+    category: 'Audio',
+    description: 'An accessory for your everyday listening.',
+  },
+  {
+    id: 2,
+    name: 'Backpack',
+    price: 12000,
+    emoji: '🎒',
+    category: 'Bags',
+    description: 'Keep your daily essentials together.',
+  },
+  {
+    id: 3,
+    name: 'Sneakers',
+    price: 25000,
+    emoji: '👟',
+    category: 'Footwear',
+    description: 'A casual addition to your wardrobe.',
+  },
+  {
+    id: 4,
+    name: 'Wristwatch',
+    price: 18000,
+    emoji: '⌚',
+    category: 'Accessories',
+    description: 'A finishing touch for your everyday look.',
+  },
 ];
 
-// 2. The name used to store our cart in the browser
 const STORAGE_KEY = 'ms-mini-shop-cart';
 
-// 3. Find the page elements
 const productList = document.querySelector('#product-list');
+const productCount = document.querySelector('#product-count');
 const cartItems = document.querySelector('#cart-items');
 const cartCount = document.querySelector('#cart-count');
 const cartTotal = document.querySelector('#cart-total');
 const cartStatus = document.querySelector('#cart-status');
-
-// Display storage problems without stopping the shop.
-const storageNotice = document.createElement('p');
-storageNotice.className =
-  'mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900';
-storageNotice.hidden = true;
-storageNotice.setAttribute('role', 'status');
-document.querySelector('#cart').append(storageNotice);
+const storageNotice = document.querySelector('#storage-notice');
 
 function showStorageNotice(message) {
   storageNotice.textContent = message;
   storageNotice.hidden = false;
 }
 
-// 4. Read the saved cart
+// Restore saved IDs and quantities.
 function loadCart() {
   try {
     const savedCart = localStorage.getItem(STORAGE_KEY);
 
-    // On the first visit, there is nothing to load.
-    if (savedCart === null) {
-      return [];
-    }
+    if (savedCart === null) return [];
 
     const parsedCart = JSON.parse(savedCart);
 
     if (!Array.isArray(parsedCart)) {
-      throw new Error('Saved cart must be an array.');
+      throw new Error('Invalid saved cart.');
     }
 
-    // Keep only valid products and quantities.
     const validCart = [];
 
     for (const item of parsedCart) {
@@ -76,7 +92,7 @@ function loadCart() {
 
     return validCart;
   } catch (error) {
-    console.warn('Could not load the saved cart:', error);
+    console.warn('Could not load cart:', error);
 
     showStorageNotice(
       'Your saved cart could not be loaded. Starting with an empty cart.'
@@ -86,28 +102,21 @@ function loadCart() {
   }
 }
 
-// Load existing items instead of always starting empty.
 let cart = loadCart();
 
-// 5. Save the current cart
 function saveCart() {
   try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(cart)
-    );
-
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
     storageNotice.hidden = true;
   } catch (error) {
-    console.warn('Could not save the cart:', error);
+    console.warn('Could not save cart:', error);
 
     showStorageNotice(
-      'Your cart works, but this browser could not save it. Items may be lost after refreshing.'
+      'Your browser could not save this cart. Items may be lost after refreshing.'
     );
   }
 }
 
-// 6. Format prices
 function formatPrice(amount) {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -116,49 +125,179 @@ function formatPrice(amount) {
   }).format(amount);
 }
 
-// 7. Display products
+// Product cards use our reusable CSS classes.
 function renderProducts() {
+  productCount.textContent = `${products.length} products`;
+
   productList.innerHTML = products
     .map((product) => {
       return `
-        <article class="rounded-2xl bg-white p-5 shadow-sm">
-          <div
-            class="flex h-36 items-center justify-center rounded-xl bg-indigo-50 text-6xl"
-            aria-hidden="true"
-          >
-            ${product.emoji}
+        <article class="product-card">
+          <div class="product-visual">
+            <span class="product-category">
+              ${product.category}
+            </span>
+
+            <span class="product-symbol" aria-hidden="true">
+              ${product.emoji}
+            </span>
           </div>
 
-          <h3 class="mt-4 text-lg font-semibold">
-            ${product.name}
-          </h3>
+          <div class="p-5">
+            <h3 class="text-lg font-semibold text-slate-900">
+              ${product.name}
+            </h3>
 
-          <p class="mt-1 font-medium text-slate-600">
-            ${formatPrice(product.price)}
-          </p>
+            <p class="mt-2 min-h-10 text-sm leading-5 text-slate-500">
+              ${product.description}
+            </p>
 
-          <button
-            type="button"
-            data-id="${product.id}"
-            aria-label="Add ${product.name} to cart"
-            class="mt-4 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700"
-          >
-            Add to cart
-          </button>
+            <p class="mt-4 text-xl font-semibold tracking-tight text-slate-900">
+              ${formatPrice(product.price)}
+            </p>
+
+            <button
+              type="button"
+              data-id="${product.id}"
+              aria-label="Add ${product.name} to cart"
+              class="primary-button mt-5"
+            >
+              <span aria-hidden="true">+</span>
+              Add to cart
+            </button>
+          </div>
         </article>
       `;
     })
     .join('');
 }
 
-// 8. Save and redraw after a change
+function renderCart() {
+  let totalQuantity = 0;
+  let totalPrice = 0;
+
+  if (cart.length === 0) {
+    cartItems.innerHTML = `
+      <li class="py-10 text-center">
+        <div
+          class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+          aria-hidden="true"
+        >
+          <svg
+            width="23"
+            height="23"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M6 7h12l1 14H5L6 7Z" />
+            <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+          </svg>
+        </div>
+
+        <p class="mt-4 text-sm font-semibold text-slate-700">
+          Your cart is waiting
+        </p>
+
+        <p class="mt-2 text-xs leading-5 text-slate-500">
+          Explore the collection and add your favourites.
+        </p>
+      </li>
+    `;
+  } else {
+    cartItems.innerHTML = cart
+      .map((item) => {
+        const product = products.find(
+          (product) => product.id === item.id
+        );
+
+        const itemTotal = product.price * item.quantity;
+
+        totalQuantity += item.quantity;
+        totalPrice += itemTotal;
+
+        return `
+          <li class="py-5">
+            <div class="flex items-start gap-3">
+              <div
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-2xl"
+                aria-hidden="true"
+              >
+                ${product.emoji}
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-slate-900">
+                  ${product.name}
+                </h3>
+
+                <p class="mt-1 text-xs text-slate-500">
+                  ${formatPrice(product.price)} each
+                </p>
+              </div>
+
+              <button
+                type="button"
+                data-action="remove"
+                data-id="${product.id}"
+                aria-label="Remove ${product.name} from cart"
+                class="remove-button"
+              >
+                Remove
+              </button>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  data-action="decrease"
+                  data-id="${product.id}"
+                  aria-label="Decrease quantity of ${product.name}"
+                  class="quantity-button"
+                >
+                  −
+                </button>
+
+                <span class="min-w-6 text-center text-sm font-medium">
+                  ${item.quantity}
+                </span>
+
+                <button
+                  type="button"
+                  data-action="increase"
+                  data-id="${product.id}"
+                  aria-label="Increase quantity of ${product.name}"
+                  class="quantity-button"
+                  ${item.quantity >= 99 ? 'disabled' : ''}
+                >
+                  +
+                </button>
+              </div>
+
+              <p class="text-sm font-semibold text-slate-900">
+                ${formatPrice(itemTotal)}
+              </p>
+            </div>
+          </li>
+        `;
+      })
+      .join('');
+  }
+
+  cartCount.textContent = totalQuantity;
+  cartTotal.textContent = formatPrice(totalPrice);
+}
+
 function updateCart(message) {
   saveCart();
   renderCart();
-  cartStatus.textContent = message;
+
+  cartStatus.textContent =
+    `${message} Cart total: ${cartTotal.textContent}.`;
 }
 
-// 9. Add a product
 function addToCart(productId) {
   const product = products.find(
     (product) => product.id === productId
@@ -187,7 +326,6 @@ function addToCart(productId) {
   updateCart(`${product.name} added to cart.`);
 }
 
-// 10. Change quantity
 function changeQuantity(productId, change) {
   const item = cart.find(
     (item) => item.id === productId
@@ -203,111 +341,16 @@ function changeQuantity(productId, change) {
   }
 
   item.quantity = newQuantity;
-
-  // Remove items whose quantity reaches zero.
   cart = cart.filter((item) => item.quantity > 0);
 
-  updateCart('Cart quantity updated.');
+  updateCart('Quantity updated.');
 }
 
-// 11. Remove a product
 function removeFromCart(productId) {
-  cart = cart.filter(
-    (item) => item.id !== productId
-  );
-
-  updateCart('Product removed from cart.');
+  cart = cart.filter((item) => item.id !== productId);
+  updateCart('Product removed.');
 }
 
-// 12. Display cart contents and totals
-function renderCart() {
-  let totalQuantity = 0;
-  let totalPrice = 0;
-
-  if (cart.length === 0) {
-    cartItems.innerHTML = `
-      <li class="rounded-xl bg-slate-50 p-5 text-center text-slate-500">
-        Your cart is empty. Add a product to get started.
-      </li>
-    `;
-  } else {
-    cartItems.innerHTML = cart
-      .map((item) => {
-        const product = products.find(
-          (product) => product.id === item.id
-        );
-
-        const itemTotal = product.price * item.quantity;
-
-        totalQuantity += item.quantity;
-        totalPrice += itemTotal;
-
-        return `
-          <li class="rounded-xl border border-slate-200 p-4">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <h3 class="font-semibold">
-                  ${product.name}
-                </h3>
-
-                <p class="mt-1 text-sm text-slate-500">
-                  ${formatPrice(product.price)} each
-                </p>
-              </div>
-
-              <button
-                type="button"
-                data-action="remove"
-                data-id="${product.id}"
-                aria-label="Remove ${product.name} from cart"
-                class="rounded px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-              >
-                Remove
-              </button>
-            </div>
-
-            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <button
-                  type="button"
-                  data-action="decrease"
-                  data-id="${product.id}"
-                  aria-label="Decrease quantity of ${product.name}"
-                  class="h-10 w-10 rounded-lg bg-slate-100 font-bold hover:bg-slate-200"
-                >
-                  −
-                </button>
-
-                <span class="min-w-5 text-center font-medium">
-                  ${item.quantity}
-                </span>
-
-                <button
-                  type="button"
-                  data-action="increase"
-                  data-id="${product.id}"
-                  aria-label="Increase quantity of ${product.name}"
-                  class="h-10 w-10 rounded-lg bg-slate-100 font-bold hover:bg-slate-200"
-                >
-                  +
-                </button>
-              </div>
-
-              <p class="font-semibold">
-                ${formatPrice(itemTotal)}
-              </p>
-            </div>
-          </li>
-        `;
-      })
-      .join('');
-  }
-
-  cartCount.textContent = totalQuantity;
-  cartTotal.textContent = formatPrice(totalPrice);
-}
-
-// 13. Handle product button clicks
 productList.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-id]');
 
@@ -316,7 +359,6 @@ productList.addEventListener('click', (event) => {
   addToCart(Number(button.dataset.id));
 });
 
-// 14. Handle cart button clicks
 cartItems.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-action]');
 
@@ -333,21 +375,27 @@ cartItems.addEventListener('click', (event) => {
     removeFromCart(productId);
   }
 
-  // Rendering replaces the buttons.
-  // Restore keyboard focus to the same control if it still exists.
-  const replacementButton = cartItems.querySelector(
+  // Keep keyboard navigation usable after the cart redraws.
+  const replacement = cartItems.querySelector(
     `button[data-id="${productId}"][data-action="${action}"]`
   );
 
-  if (replacementButton) {
-    replacementButton.focus();
+  const decreaseButton = cartItems.querySelector(
+    `button[data-id="${productId}"][data-action="decrease"]`
+  );
+
+  const productButton = productList.querySelector(
+    `button[data-id="${productId}"]`
+  );
+
+  if (replacement && !replacement.disabled) {
+    replacement.focus();
+  } else if (decreaseButton) {
+    decreaseButton.focus();
   } else {
-    document.querySelector(
-      `#product-list button[data-id="${productId}"]`
-    )?.focus();
+    productButton?.focus();
   }
 });
 
-// 15. Display the initial page
 renderProducts();
 renderCart();

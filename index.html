@@ -5,70 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A mini shopping cart built with vanilla JavaScript."
+      content="M-S Mini Shop — a collection of everyday essentials."
     />
     <title>M-S Mini Shop</title>
   </head>
 
-  <body class="min-h-screen bg-slate-100 text-slate-900">
-    <header class="bg-slate-900 text-white">
-      <div
-        class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-6"
-      >
-        <div>
-          <p class="text-xs uppercase tracking-widest text-indigo-300">
-            Everyday essentials
-          </p>
-          <h1 class="mt-1 text-2xl font-bold">M-S Mini Shop</h1>
-        </div>
+  <body>
+    <header class="site-header">
+      <div class="page-container flex items-center justify-between gap-4 py-5">
+        <a href="./" class="flex items-center gap-3" aria-label="M-S Mini Shop home">
+          <span class="brand-mark">M-S</span>
 
-        <a
-          href="#cart"
-          class="shrink-0 rounded-xl bg-slate-800 px-4 py-3 text-sm"
-        >
-          Cart (<span id="cart-count">0</span>)
+          <div>
+            <p class="text-base font-semibold tracking-wide sm:text-lg">
+              MINI SHOP
+            </p>
+            <p class="mt-1 text-xs text-slate-300">
+              Everyday essentials
+            </p>
+          </div>
+        </a>
+
+        <a href="#cart" class="cart-link">
+          <svg
+            width="19"
+            height="19"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            aria-hidden="true"
+          >
+            <path d="M6 7h12l1 14H5L6 7Z" />
+            <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+          </svg>
+
+          <span>Cart</span>
+          <span id="cart-count" class="cart-badge">0</span>
         </a>
       </div>
     </header>
 
-    <main
-      class="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-3"
-    >
-      <section class="min-w-0 lg:col-span-2" aria-labelledby="products-heading">
-        <h2 id="products-heading" class="text-2xl font-bold">
-          Shop our products
-        </h2>
-        <p class="mt-2 text-slate-600">
-          Pick something you like and add it to your cart.
-        </p>
+    <main class="page-container py-8 sm:py-12">
+      <section class="intro-panel" aria-labelledby="page-heading">
+        <div class="max-w-2xl">
+          <p class="eyebrow">THE EVERYDAY COLLECTION</p>
 
-        <div
-          id="product-list"
-          class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
-        ></div>
-      </section>
+          <h1
+            id="page-heading"
+            class="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl"
+          >
+            Simple choices.<br />
+            Everyday essentials.
+          </h1>
 
-      <aside
-        id="cart"
-        class="min-w-0 self-start rounded-2xl bg-white p-5 shadow-sm lg:sticky lg:top-6"
-        aria-labelledby="cart-heading"
-      >
-        <h2 id="cart-heading" class="text-xl font-bold">Your cart</h2>
+          <p class="mt-4 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">
+            Browse our collection of accessories and everyday favourites.
+            Find what suits you and build your cart.
+          </p>
 
-        <ul id="cart-items" class="mt-5 space-y-4"></ul>
+          <a href="#collection" class="browse-link">
+            Explore the collection <span aria-hidden="true">↗</span>
+          </a>
+        </div>
 
-        <div class="mt-6 border-t border-slate-200 pt-5">
-          <div class="flex items-center justify-between gap-3">
-            <span class="font-medium">Total</span>
-            <span id="cart-total" class="text-xl font-bold">₦0</span>
-          </div>
-
-          <p class="mt-3 text-sm text-slate-500">
-            Practice shop — no payment will be collected.
+        <div class="collection-note">
+          <span class="gold-line"></span>
+          <p class="text-xs uppercase tracking-widest text-slate-500">
+            M-S Mini Shop
+          </p>
+          <p class="mt-3 text-lg font-medium text-slate-800">
+            A little more considered.
+          </p>
+          <p class="mt-2 text-sm leading-6 text-slate-500">
+            A simple shopping experience, from browsing to your basket.
           </p>
         </div>
-      </aside>
+      </section>
+
+      <div class="mt-10 grid items-start gap-8 lg:grid-cols-3">
+        <section
+          id="collection"
+          class="min-w-0 scroll-mt-6 lg:col-span-2"
+          aria-labelledby="products-heading"
+        >
+          <div class="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p class="eyebrow">BROWSE & DISCOVER</p>
+              <h2 id="products-heading" class="mt-2 text-2xl font-semibold">
+                Our collection
+              </h2>
+            </div>
+
+            <span id="product-count" class="shrink-0 text-sm text-slate-500"></span>
+          </div>
+
+          <div
+            id="product-list"
+            class="grid grid-cols-1 gap-5 sm:grid-cols-2"
+          ></div>
+        </section>
+
+        <aside
+          id="cart"
+          class="cart-panel scroll-mt-6 lg:sticky lg:top-6"
+          aria-labelledby="cart-heading"
+        >
+          <div class="border-b border-slate-200 pb-5">
+            <p class="eyebrow">YOUR SELECTION</p>
+            <h2 id="cart-heading" class="mt-2 text-xl font-semibold">
+              Shopping cart
+            </h2>
+          </div>
+
+          <ul id="cart-items" class="divide-y divide-slate-100"></ul>
+
+          <div class="border-t border-slate-200 pt-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <span class="text-sm text-slate-600">Cart total</span>
+              <span id="cart-total" class="text-2xl font-semibold">₦0</span>
+            </div>
+
+            <div class="mt-5 rounded-lg bg-slate-50 p-3">
+              <p class="text-xs leading-5 text-slate-500">
+                This is a practice store. Checkout and payments are not
+                available.
+              </p>
+            </div>
+          </div>
+
+          <p id="storage-notice" class="storage-notice" role="status" hidden></p>
+        </aside>
+      </div>
     </main>
+
+    <footer class="mt-6 border-t border-slate-200 bg-white">
+      <div
+        class="page-container flex flex-col gap-2 py-6 text-xs text-slate-500 sm:flex-row sm:justify-between"
+      >
+        <p class="font-medium text-slate-700">M-S MINI SHOP</p>
+        <p>A learning project built with care.</p>
+      </div>
+    </footer>
 
     <p id="cart-status" class="sr-only" role="status"></p>
 
