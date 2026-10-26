@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #4f46e5;
+  outline-offset: 3px;
+}
