@@ -1,41 +1,5 @@
 import './style.css';
-
-// Product IDs stay the same so existing saved carts still work.
-const products = [
-  {
-    id: 1,
-    name: 'Headphones',
-    price: 15000,
-    emoji: '🎧',
-    category: 'Audio',
-    description: 'An accessory for your everyday listening.',
-  },
-  {
-    id: 2,
-    name: 'Backpack',
-    price: 12000,
-    emoji: '🎒',
-    category: 'Bags',
-    description: 'Keep your daily essentials together.',
-  },
-  {
-    id: 3,
-    name: 'Sneakers',
-    price: 25000,
-    emoji: '👟',
-    category: 'Footwear',
-    description: 'A casual addition to your wardrobe.',
-  },
-  {
-    id: 4,
-    name: 'Wristwatch',
-    price: 18000,
-    emoji: '⌚',
-    category: 'Accessories',
-    description: 'A finishing touch for your everyday look.',
-  },
-];
-
+import { products } from '../shared/products.js';
 const STORAGE_KEY = 'ms-mini-shop-cart';
 
 const productList = document.querySelector('#product-list');
@@ -399,3 +363,176 @@ cartItems.addEventListener('click', (event) => {
 
 renderProducts();
 renderCart();
+
+// Create the checkout form below the cart.
+const checkoutForm = document.createElement('form');
+
+checkoutForm.className =
+  'mt-6 border-t border-slate-200 pt-5';
+
+checkoutForm.innerHTML = `
+  <p class="eyebrow">TEST CHECKOUT</p>
+
+  <label
+    for="checkout-email"
+    class="mt-4 block text-sm font-medium text-slate-700"
+  >
+    Your email address
+  </label>
+
+  <input
+    id="checkout-email"
+    type="email"
+    autocomplete="email"
+    maxlength="254"
+    required
+    placeholder="you@example.com"
+    class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm"
+  />
+
+  <button
+    id="checkout-button"
+    type="submit"
+    class="primary-button mt-4"
+  >
+    Continue to test payment
+  </button>
+
+  <p class="mt-3 text-xs leading-5 text-slate-500">
+    Test mode only. No real money will be collected.
+  </p>
+
+  <p
+    id="payment-message"
+    class="mt-4 break-words text-sm leading-6 text-slate-700"
+    role="status"
+    tabindex="-1"
+  ></p>
+`;
+
+document.querySelector('#cart').append(checkoutForm);
+
+const checkoutButton = document.querySelector('#checkout-button');
+const checkoutEmail = document.querySelector('#checkout-email');
+const paymentMessage = document.querySelector('#payment-message');
+
+// Read a JSON response and handle backend errors.
+async function readPaymentResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      'Cannot reach the payment backend. Check that node server.js is running and the Vite proxy is configured.'
+    );
+  }
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'The payment request failed.');
+  }
+
+  return result;
+}
+
+// Start a test payment.
+checkoutForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  if (cart.length === 0) {
+    paymentMessage.textContent =
+      'Add at least one product before checking out.';
+    return;
+  }
+
+  checkoutButton.disabled = true;
+  checkoutButton.textContent = 'Opening checkout…';
+  paymentMessage.textContent = '';
+
+  try {
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: checkoutEmail.value.trim(),
+        items: cart.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
+      }),
+    });
+
+    const result = await readPaymentResponse(response);
+
+    // Only redirect to Paystack's hosted checkout.
+    const checkoutUrl = new URL(result.checkoutUrl);
+
+    if (
+      checkoutUrl.protocol !== 'https:' ||
+      checkoutUrl.hostname !== 'checkout.paystack.com'
+    ) {
+      throw new Error('The server returned an invalid checkout address.');
+    }
+
+    window.location.assign(checkoutUrl.href);
+  } catch (error) {
+    paymentMessage.textContent = error.message;
+    checkoutButton.disabled = false;
+    checkoutButton.textContent = 'Continue to test payment';
+  }
+});
+
+// Verify payment after Paystack returns the customer to the shop.
+async function verifyReturnedPayment() {
+  const parameters = new URLSearchParams(window.location.search);
+  const reference = parameters.get('reference');
+
+  if (!reference) return;
+
+  checkoutButton.disabled = true;
+  paymentMessage.textContent = 'Checking your payment…';
+
+  try {
+    const response = await fetch(
+      `/api/verify?reference=${encodeURIComponent(reference)}`
+    );
+
+    const result = await readPaymentResponse(response);
+
+    if (result.paid) {
+      paymentMessage.textContent =
+        `Test payment verified: ${formatPrice(result.amount / 100)}. ` +
+        `Reference: ${result.reference}. ` +
+        'Your cart has been kept for further practice.';
+
+      checkoutButton.textContent = 'Start another test payment';
+
+      parameters.delete('reference');
+      parameters.delete('trxref');
+
+      const query = parameters.toString();
+
+      window.history.replaceState(
+        {},
+        '',
+        window.location.pathname +
+          (query ? `?${query}` : '') +
+          window.location.hash
+      );
+    } else {
+      paymentMessage.textContent =
+        `Payment not confirmed. Status: ${result.status}. ` +
+        'Refresh to check again before attempting another payment.';
+    }
+  } catch (error) {
+    paymentMessage.textContent =
+      `${error.message} Refresh to retry verification before paying again.`;
+  } finally {
+    checkoutButton.disabled = false;
+    paymentMessage.focus();
+  }
+}
+
+verifyReturnedPayment();

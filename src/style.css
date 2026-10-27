@@ -113,3 +113,71 @@
     @apply mt-4 rounded-lg bg-amber-50 p-3 text-sm leading-6 text-amber-900;
   }
 }
+
+/* Smooth movement for product cards and their illustrations. */
+.product-card {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.product-symbol {
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+
+/* Apply hover movement on devices that support hovering. */
+@media (hover: hover) and (pointer: fine) {
+  .product-card:hover {
+    transform: translateY(-6px);
+    border-color: #b89b5e;
+    box-shadow: 0 16px 32px rgb(15 23 42 / 0.1);
+  }
+
+  .product-card:hover .product-symbol {
+    transform: scale(1.08);
+  }
+}
+
+/* Keyboard users also get a highlighted card. */
+.product-card:focus-within {
+  border-color: #b89b5e;
+  box-shadow: 0 0 0 2px rgb(184 155 94 / 0.2);
+}
+
+.primary-button:active {
+  transform: scale(0.98);
+}
+
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.checkout-input {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+}
+
+.checkout-input:focus-visible {
+  outline: 3px solid #b89b5e;
+  outline-offset: 2px;
+}
+
+/* Respect users who prefer less animation. */
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-symbol,
+  .primary-button {
+    transition: none;
+    transform: none !important;
+  }
+}
